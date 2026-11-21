@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PROJECT ECLIPSE — 原创 3D 科幻第一人称射击游戏" />
+    <title>PROJECT ECLIPSE</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2305080c'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='%2335e0ff' stroke-width='4'/%3E%3Ccircle cx='38' cy='28' r='15' fill='%2305080c'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="viewport"></div>
+
+      <!-- ============ HUD ============ -->
+      <div id="hud" class="hidden">
+        <div id="vignette-hit"></div>
+        <div id="pickup-flash"></div>
+
+        <div id="crosshair">
+          <i class="ch t"></i><i class="ch b"></i><i class="ch l"></i><i class="ch r"></i><i class="dot"></i>
+          <div id="hitmarker"><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div id="dmg-indicators"></div>
+        <div id="waypoint"><span class="wp-diamond"></span><span id="waypoint-dist"></span></div>
+
+        <div id="objective" class="panel">
+          <div class="label">当前目标</div>
+          <div id="objective-title"></div>
+          <div id="objective-detail"></div>
+        </div>
+
+        <div id="zone-name"></div>
+        <div id="banner"><div id="banner-title"></div><div id="banner-sub"></div></div>
+
+        <div id="boss" class="hidden">
+          <div class="boss-name"><span>OMEGA-01</span><em id="boss-phase">阶段 I</em></div>
+          <div class="boss-bar"><div id="boss-fill"></div><i style="left: 33%"></i><i style="left: 66%"></i></div>
+        </div>
+
+        <div id="defense" class="hidden">
+          <div class="label">能源重启</div>
+          <div class="bar"><div id="defense-fill"></div></div>
+        </div>
+
+        <div id="alert-flash">! 已被发现</div>
+        <div id="prompt" class="hidden"><kbd>E</kbd><span id="prompt-text"></span></div>
+        <div id="hint" class="hidden"></div>
+        <div id="subtitle" class="hidden"><b id="subtitle-speaker"></b><span id="subtitle-text"></span></div>
+        <div id="toasts"></div>
+
+        <div id="vitals" class="panel">
+          <div class="vital">
+            <span class="icon">✚</span>
+            <div class="bar hp"><div id="hp-fill"></div><div id="hp-lag"></div></div>
+            <span id="hp-num" class="num">100</span>
+          </div>
+          <div class="vital">
+            <span class="icon">⛨</span>
+            <div class="bar ar"><div id="ar-fill"></div></div>
+            <span id="ar-num" class="num">0</span>
+          </div>
+          <div id="keycard" class="hidden">▣ A 级门禁卡</div>
+        </div>
+
+        <div id="weapon" class="panel">
+          <div id="weapon-name">AR-9</div>
+          <div id="weapon-sub">突击步枪</div>
+          <div id="ammo"><span id="ammo-mag">30</span><span class="sep">/</span><span id="ammo-res">120</span></div>
+          <div id="heat" class="hidden"><div class="bar"><div id="heat-fill"></div></div><span id="heat-label">热量</span></div>
+          <div id="weapon-warn"></div>
+          <div id="slots">
+            <div class="slot" data-slot="ar9"><kbd>1</kbd>AR-9</div>
+            <div class="slot" data-slot="viper"><kbd>2</kbd>VIPER</div>
+            <div class="slot" data-slot="helix"><kbd>3</kbd>HELIX</div>
+          </div>
+        </div>
+
+        <div id="fps" class="hidden"></div>
+      </div>
+
+      <div id="fade"></div>
+
+      <!-- ============ 菜单 ============ -->
+      <div id="screen-loading" class="screen">
+        <div class="loader">
+          <div class="logo-mark"></div>
+          <div class="load-title">PROJECT ECLIPSE</div>
+          <div class="load-bar"><div id="load-fill"></div></div>
+          <div id="load-text">初始化系统…</div>
+        </div>
+      </div>
+
+      <div id="screen-main" class="screen hidden">
+        <div class="scanlines"></div>
+        <div class="menu-left">
+          <div class="logo">
+            <div class="logo-mark"></div>
+            <div>
+              <div class="logo-pre">联合深空特勤局 UDSA // 机密行动</div>
+              <h1>PROJECT<br /><span>ECLIPSE</span></h1>
+              <div class="logo-sub">日 蚀 计 划</div>
+            </div>
+          </div>
+          <nav class="menu-list">
+            <button id="btn-continue" class="menu-btn"><span>继续任务</span><em id="continue-info"></em></button>
+            <button id="btn-new" class="menu-btn primary"><span>开始新任务</span><em>第一关 · 日蚀降临</em></button>
+            <button id="btn-settings" class="menu-btn"><span>设置</span><em>操控 · 画面 · 音频</em></button>
+            <button id="btn-controls" class="menu-btn"><span>操作说明</span><em>键位与提示</em></button>
+          </nav>
+        </div>
+        <div class="menu-foot">
+          <span>KEPLER-442 · 日蚀站 · 2189.03.17</span>
+          <span>原创作品 · 全部资源程序化生成 · v1.0</span>
+        </div>
+      </div>
+
+      <div id="screen-controls" class="screen modal hidden">
+        <div class="dialog">
+          <h2>操作说明</h2>
+          <div class="keys">
+            <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>移动</span></div>
+            <div><kbd>鼠标</kbd><span>瞄准</span></div>
+            <div><kbd>左键</kbd><span>开火</span></div>
+            <div><kbd>右键</kbd><span>瞄准镜 (ADS)</span></div>
+            <div><kbd>Shift</kbd><span>冲刺</span></div>
+            <div><kbd>Space</kbd><span>跳跃</span></div>
+            <div><kbd>Ctrl</kbd> / <kbd>C</kbd><span>蹲伏 · 冲刺中为滑铲</span></div>
+            <div><kbd>R</kbd><span>换弹 · HELIX 手动排热</span></div>
+            <div><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> / <kbd>滚轮</kbd><span>切换武器</span></div>
+            <div><kbd>E</kbd><span>交互</span></div>
+            <div><kbd>Esc</kbd><span>暂停</span></div>
+          </div>
+          <p class="tips">提示：爆头与弱点造成额外伤害 · 重型机器人正面有装甲，背部反应堆是弱点 · 看到红色激光立即横移 · 红色油桶可以引爆。</p>
+          <div class="dialog-actions"><button class="btn" data-back>返回</button></div>
+        </div>
+      </div>
+
+      <div id="screen-settings" class="screen modal hidden">
+        <div class="dialog wide">
+          <h2>设置</h2>
+          <div class="settings-grid">
+            <section>
+              <h3>操控</h3>
+              <label>鼠标灵敏度 <output id="o-sensitivity"></output><input id="s-sensitivity" type="range" min="0.2" max="3" step="0.05" /></label>
+              <label>瞄准灵敏度倍率 <output id="o-adsSensitivity"></output><input id="s-adsSensitivity" type="range" min="0.3" max="1.5" step="0.05" /></label>
+              <label>视野 (FOV) <output id="o-fov"></output><input id="s-fov" type="range" min="70" max="110" step="1" /></label>
+              <label class="check"><input id="s-invertY" type="checkbox" /> 反转 Y 轴</label>
+              <label class="check"><input id="s-viewBob" type="checkbox" /> 镜头摆动</label>
+              <label>屏幕震动 <output id="o-screenShake"></output><input id="s-screenShake" type="range" min="0" max="1" step="0.05" /></label>
+            </section>
+            <section>
+              <h3>音频</h3>
+              <label>主音量 <output id="o-masterVolume"></output><input id="s-masterVolume" type="range" min="0" max="1" step="0.05" /></label>
+              <label>音效 <output id="o-sfxVolume"></output><input id="s-sfxVolume" type="range" min="0" max="1" step="0.05" /></label>
+              <label>音乐 <output id="o-musicVolume"></output><input id="s-musicVolume" type="range" min="0" max="1" step="0.05" /></label>
+              <h3>画面与难度</h3>
+              <label>画质
+                <select id="s-quality"><option value="low">低（关闭阴影）</option><option value="medium">中</option><option value="high">高</option></select>
+              </label>
+              <label>难度
+                <select id="s-difficulty"><option value="easy">新兵</option><option value="normal">老兵</option><option value="hard">噩梦</option></select>
+              </label>
+              <label class="check"><input id="s-showFps" type="checkbox" /> 显示帧率</label>
+            </section>
+          </div>
+          <div class="dialog-actions">
+            <button class="btn ghost" id="btn-reset-settings">恢复默认</button>
+            <button class="btn" data-back>完成</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-briefing" class="screen hidden">
+        <div class="scanlines"></div>
+        <div class="briefing">
+          <div class="brief-head"><span>任务简报</span><span>行动代号：ECLIPSE · 密级：绝密</span></div>
+          <h2>第一关 · 日蚀降临</h2>
+          <div id="brief-text"></div>
+          <ul class="brief-goals">
+            <li>突入机库，取得 A 级门禁卡</li>
+            <li>穿过研究实验室与工业区</li>
+            <li>重启基地能源，开启中央核心</li>
+            <li>摧毁核心守卫 OMEGA-01</li>
+          </ul>
+          <div class="dialog-actions"><button class="btn ghost" id="btn-brief-back">返回</button><button class="btn primary" id="btn-deploy">开始空降 ▸</button></div>
+        </div>
+      </div>
+
+      <div id="screen-pause" class="screen modal hidden">
+        <div class="dialog narrow">
+          <h2>已暂停</h2>
+          <div id="pause-objective" class="pause-obj"></div>
+          <button class="menu-btn primary" id="btn-resume"><span>继续</span></button>
+          <button class="menu-btn" id="btn-pause-settings"><span>设置</span></button>
+          <button class="menu-btn" id="btn-pause-controls"><span>操作说明</span></button>
+          <button class="menu-btn" id="btn-restart-cp"><span>从检查点重新开始</span></button>
+          <button class="menu-btn" id="btn-quit"><span>返回主菜单</span></button>
+        </div>
+      </div>
+
+      <div id="screen-dead" class="screen hidden">
+        <div class="dead-box">
+          <div class="dead-title">信号丢失</div>
+          <div class="dead-sub">游骑兵阵亡 — 生命体征归零</div>
+          <div id="dead-tip" class="dead-tip"></div>
+          <div class="dialog-actions">
+            <button class="btn primary" id="btn-retry">从检查点重试</button>
+            <button class="btn ghost" id="btn-dead-quit">返回主菜单</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-victory" class="screen hidden">
+        <div class="scanlines"></div>
+        <div class="victory">
+          <div class="brief-head"><span>任务完成</span><span>OMEGA-01 已摧毁 · 防御网络离线</span></div>
+          <h2>日蚀站 已收复</h2>
+          <div id="rank" class="rank">S</div>
+          <div class="stats" id="stats"></div>
+          <p class="epilogue">中央核心沉寂下来，基地的灯光逐一恢复为平静的青色。但在数据库深处，一段加密信号刚刚被发往星系之外……</p>
+          <div class="dialog-actions">
+            <button class="btn primary" id="btn-again">再次挑战</button>
+            <button class="btn ghost" id="btn-victory-quit">返回主菜单</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-error" class="screen modal hidden">
+        <div class="dialog"><h2>无法启动</h2><p id="error-text"></p></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

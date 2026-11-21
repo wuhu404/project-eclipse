@@ -1,0 +1,24 @@
+{
+  "name": "project-eclipse",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PROJECT ECLIPSE — 原创 3D 科幻第一人称射击游戏 (Three.js + Rapier + TypeScript)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview --host",
+    "test:e2e": "node tests/e2e.mjs"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.21.0",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.187.0",
+    "playwright-core": "^1.65.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}
