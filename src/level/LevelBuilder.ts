@@ -41,8 +41,9 @@ function shaftMaterial(color: number, strength: number): THREE.ShaderMaterial {
       uniform vec3 uColor; uniform float uStrength;
       varying vec2 vUv; varying vec3 vN; varying vec3 vV;
       void main() {
-        float rim = pow(abs(dot(normalize(vN), normalize(vV))), 2.2);
-        float fade = pow(vUv.y, 1.6);
+        // 注意：MSAA 下 varying 会外插到 [0,1] 之外；pow(负数) 在真实 GPU 上是 NaN，会被 Bloom 扩散成黑块
+        float rim = pow(clamp(abs(dot(normalize(vN), normalize(vV))), 0.0, 1.0), 2.2);
+        float fade = pow(clamp(vUv.y, 0.0, 1.0), 1.6);
         gl_FragColor = vec4(uColor * rim * fade * uStrength, 1.0);
       }`,
   });

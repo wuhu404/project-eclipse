@@ -289,8 +289,8 @@ export class Fx {
         uniforms: { uColor: { value: new THREE.Color(1, 1, 1) }, uAlpha: { value: 1 } },
         vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
         fragmentShader: `uniform vec3 uColor; uniform float uAlpha; varying vec2 vUv;
-          void main(){ float a = 1.0 - abs(vUv.x - 0.5) * 2.0; a = pow(a, 2.0);
-            float tail = smoothstep(0.0, 0.25, vUv.y) * smoothstep(1.0, 0.92, vUv.y);
+          void main(){ float a = clamp(1.0 - abs(vUv.x - 0.5) * 2.0, 0.0, 1.0); a = a * a;
+            float tail = smoothstep(0.0, 0.25, vUv.y) * (1.0 - smoothstep(0.92, 1.0, vUv.y));
             gl_FragColor = vec4(uColor * a * tail * uAlpha, 1.0); }`,
         transparent: true,
         depthWrite: false,

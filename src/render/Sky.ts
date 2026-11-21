@@ -86,7 +86,7 @@ export class Sky {
           // 日蚀：黑色圆盘 + 日冕
           float ang = acos(clamp(cosA, -1.0, 1.0));
           float R = 0.105;
-          float disc = smoothstep(R, R - 0.004, ang);
+          float disc = 1.0 - smoothstep(R - 0.004, R, ang);
           // 日冕射线
           vec3 up = normalize(cross(uSunDir, vec3(0.0, 1.0, 0.0)));
           vec3 rt = cross(up, uSunDir);
@@ -106,10 +106,10 @@ export class Sky {
           float pa = acos(clamp(dot(d, pDir), -1.0, 1.0));
           float pr = 0.045;
           if (pa < pr) {
-            float lit = clamp(dot(normalize(d - pDir), normalize(uSunDir - pDir)) * 0.7 + 0.35, 0.0, 1.0);
+            float lit = clamp(dot(normalize(d - pDir + vec3(1e-6)), normalize(uSunDir - pDir)) * 0.7 + 0.35, 0.0, 1.0);
             vec3 pc = mix(vec3(0.05, 0.04, 0.08), vec3(0.75, 0.5, 0.42), lit);
             pc *= 0.8 + 0.2 * sin(d.y * 900.0);
-            col = mix(col, pc, smoothstep(pr, pr - 0.003, pa));
+            col = mix(col, pc, 1.0 - smoothstep(pr - 0.003, pr, pa));
           }
 
           // 地平线以下压暗

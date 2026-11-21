@@ -70,7 +70,7 @@ const FinalShader = {
       col.g = texture2D(tDiffuse, vUv).g;
       col.b = texture2D(tDiffuse, vUv - c * ab).b;
 
-      col *= uExposure;
+      col = clamp(col, 0.0, 64.0) * uExposure;
       col = aces(col);
       // 轻微的冷暖分离调色：暗部偏青，亮部偏暖
       float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
@@ -79,7 +79,7 @@ const FinalShader = {
       col = mix(col, vec3(l), uDesat);
 
       // 暗角
-      float vig = smoothstep(0.85, 0.2, sqrt(r2) * 1.25);
+      float vig = 1.0 - smoothstep(0.2, 0.85, sqrt(r2) * 1.25);
       col *= mix(1.0, vig, uVignette);
 
       // 受伤红晕 / 低血量脉动
@@ -90,10 +90,40 @@ const FinalShader = {
       col += vec3(0.1, 0.5, 0.7) * edge * uShield * 0.5;
 
       col += vec3(uFlash);
-      col = pow(col, vec3(1.0 / 2.2));
+      col = pow(max(col, vec3(0.0)), vec3(1.0 / 2.2));
       col += (hash(vUv * vec2(1920.0, 1080.0) + uTime * 60.0) - 0.5) * uGrain;
       col *= 1.0 - uFade;
       gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+};
+
+/**
+ * HDR 清洗通道（位于 Bloom 之前）：去掉 NaN / Inf / 负值并限幅。
+ * 任何一个 NaN 像素都会被 Bloom 的多级模糊扩散成遮住画面的大黑块，这里做最后一道防线。
+ */
+const SanitizeShader = {
+  uniforms: { tDiffuse: { value: null as THREE.Texture | null } },
+  vertexShader: /* glsl */ `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    varying vec2 vUv;
+    float fix(float v) {
+      // NaN 与任何数比较都为 false；Inf 超过上限
+      return (v >= 0.0 && v <= 64.0) ? v : (v > 64.0 ? 64.0 : 0.0);
+    }
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      #if __VERSION__ >= 300
+        if (any(isnan(c.rgb)) || any(isinf(c.rgb))) c.rgb = vec3(0.0);
+      #endif
+      gl_FragColor = vec4(fix(c.r), fix(c.g), fix(c.b), 1.0);
     }
   `,
 };
@@ -109,6 +139,7 @@ export class Gfx {
   private weaponPass!: RenderPass;
   private bloomPass!: UnrealBloomPass;
   private finalPass!: ShaderPass;
+  private sanitizePass!: ShaderPass;
   sun: THREE.DirectionalLight;
   hemi: THREE.HemisphereLight;
   fog: THREE.FogExp2;
@@ -256,7 +287,9 @@ export class Gfx {
     this.bloomPass.enabled = q !== 'low';
     this.finalPass = new ShaderPass(FinalShader);
     this.composer.addPass(this.worldPass);
+    this.sanitizePass = new ShaderPass(SanitizeShader);
     this.composer.addPass(this.weaponPass);
+    this.composer.addPass(this.sanitizePass);
     this.composer.addPass(this.bloomPass);
     this.composer.addPass(this.finalPass);
   }

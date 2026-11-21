@@ -252,3 +252,10 @@ interface Slot {
 - 油桶移位后 hall.mjs（HP66 起步、不躲避的机器人）：能清掉哨兵/猎手，最终死于重装的迫击炮+砸地（有预警、设计上需躲避）→ 视为合理，不再调。正在重跑默认 e2e 确认 76/76；随后写 docs/TESTING.md、git commit、browser_preview、汇报。
 - docs/TESTING.md 已写。等待默认 e2e 重跑结果。
 - ✅ 油桶改动后默认 e2e 76/76、build 成功。已 git add，待 commit → browser_preview(5173) → 汇报。
+
+## 用户反馈 1（真机试玩）
+- 用户报告：①某些特效有黑块；②开门后屏幕会被黑块遮挡。VM（SwiftShader）截图中未见。首要怀疑：着色器输出 NaN/负值经 Bloom 扩散成黑块（pow 负数、normalize(0)、除零），或 HalfFloat 渲染目标/粒子混合问题。排查 Gfx 最终合成 shader、Fx 粒子/光束 shader、门相关特效。
+- 旁支发现：640x360 小窗口下简报界面的「开始空降」按钮超出视口（待修：.screen 内容加 max-height + overflow:auto）。tests/nan.mjs = HDR 缓冲 NaN/Inf 扫描器（结果 tests/out/nan.log）。
+- ✅ 根因基本确认（tests/nan2.mjs）：MSAA 下光柱 shader 的 vUv.y 在机库视角有 482 个像素（640x360）外插为负值 → pow(负数,1.6) 在真实 GPU（ANGLE/D3D）上得 NaN → 加色混合写入 HDR 缓冲 → Bloom 多级模糊扩散成大黑块（开门看到机库光柱时出现）；曳光 shader 的 pow(a,2.0) 同理（特效黑块）。SwiftShader 的 pow 不产生 NaN 所以 VM 不复现。修复计划：①所有自定义 shader 的 pow/smoothstep 输入钳制（LevelBuilder 光柱、Fx 曳光、Gfx 最终合成、Sky 反向 smoothstep）；②Bloom 前加 Sanitize 通道（清 NaN/Inf/负值并限幅 64）；③用注入 NaN 的测试验证 Sanitize。
+- 已改：光柱/曳光/天空/最终合成 shader 的 pow、反向 smoothstep 全部钳制；Gfx 新增 SanitizeShader + sanitizePass（位于 weaponPass 与 bloomPass 之间）。tests/nan2.mjs 向光柱注入 NaN：清洗关 → 整个 640x360 缓冲全部 NaN（复现了用户的整屏黑块）。注意 composer 交换：清洗开启时应扫描 composer.writeBuffer（两次 swap），正在重跑验证清洗是否生效。
+- ✅ 清洗通道验证通过（tests/out/nan2.log）：注入 NaN/Inf/负值时，清洗关 = 全屏 691200 个 NaN 分量；清洗开 = 0。截图 nan-injected-off/on.png 待看。之后：重跑 e2e 回归 → build → commit → 回复用户（说明 VM 无 GPU 无法在真机复现，是通过注入复现+根因分析修的，请用户刷新预览确认）。
