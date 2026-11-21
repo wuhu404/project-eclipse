@@ -6,7 +6,7 @@
     <meta name="description" content="PROJECT ECLIPSE — 原创 3D 科幻第一人称射击游戏" />
     <title>PROJECT ECLIPSE</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2305080c'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='%2335e0ff' stroke-width='4'/%3E%3Ccircle cx='38' cy='28' r='15' fill='%2305080c'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="/src/styles.css" />
+    <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
     <div id="app">
@@ -108,6 +108,7 @@
             <button id="btn-settings" class="menu-btn"><span>设置</span><em>操控 · 画面 · 音频</em></button>
             <button id="btn-controls" class="menu-btn"><span>操作说明</span><em>键位与提示</em></button>
           </nav>
+          <p id="touch-note" class="touch-note hidden">本游戏需要键盘和鼠标操作，请在电脑浏览器（Chrome / Edge / Firefox / Safari）中打开。</p>
         </div>
         <div class="menu-foot">
           <span>KEPLER-442 · 日蚀站 · 2189.03.17</span>
@@ -230,6 +231,6 @@
         <div class="dialog"><h2>无法启动</h2><p id="error-text"></p></div>
       </div>
     </div>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

@@ -229,7 +229,13 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .stat span { font-size: 12px; letter-spacing: 0.2em; color: var(--muted); }
 .epilogue { margin: 22px 0 0; font-size: 15px; line-height: 1.8; color: var(--muted); font-style: italic; }
 
+.briefing, .victory { max-height: 94vh; max-height: 94dvh; overflow: auto; }
+.touch-note { margin: 22px 0 0; max-width: 420px; padding: 10px 14px; border-left: 2px solid var(--orange); background: rgba(255, 140, 40, 0.08); font-size: 13px; line-height: 1.6; color: #ffd9b0; }
+.touch-note.hidden { display: none; }
+
 @media (max-width: 900px) {
+  .briefing, .victory { padding: 22px 20px; }
+  .menu-foot { display: none; }
   .settings-grid, .keys, .brief-goals { grid-template-columns: 1fr; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .logo h1 { font-size: 40px; }

@@ -7,6 +7,16 @@
 - 所有几何体、PBR 纹理、特效、音效与音乐均为**程序化生成**，没有任何外部素材、远程后端或付费 API
 - 一个完整关卡，8 个区域，目标时长 10–15 分钟
 
+## 在线试玩
+
+**https://wuhu404.github.io/project-eclipse/** — 需要桌面浏览器、键盘和鼠标。
+
+## 部署（GitHub Pages）
+
+推送到 `main` 分支后，`.github/workflows/deploy.yml` 会自动安装依赖、类型检查、生产构建并发布到 GitHub Pages；构建失败则不会发布。也可以在仓库的 Actions 页面手动运行 "Deploy to GitHub Pages"。
+
+构建时 CI 通过环境变量 `VITE_BASE` 把资源路径设为 `/<仓库名>/`；本地构建默认使用相对路径，`dist/` 放到任意静态目录都能运行。
+
 ## 安装与运行
 
 需要 Node.js 20+ 和支持 WebGL2 的桌面浏览器（建议 Chrome / Edge，使用独立或集成 GPU）。

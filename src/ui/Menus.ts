@@ -53,6 +53,8 @@ export class Menus {
       victory: el('screen-victory'),
       error: el('screen-error'),
     };
+    // 纯触屏设备（没有鼠标/触控板）无法使用 Pointer Lock 与键盘操作：在主菜单给出提示，而不是让玩家卡在游戏里
+    if (!window.matchMedia('(any-pointer: fine)').matches) el('touch-note').classList.remove('hidden');
     const click = (id: string, fn: () => void): void => {
       el(id).addEventListener('click', () => {
         this.audio.init();
